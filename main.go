@@ -192,45 +192,83 @@ import "fmt"
 
 // 自己先写，写不出来再问我。写完贴给我看。
 
-type Student struct {
-	Name  string
-	Score int
-}
+// type Student struct {
+// 	Name  string
+// 	Score int
+// }
 
 func main() {
-	s1 := Student{
-		Name:  "小陈",
-		Score: 100,
-	}
+	// s1 := Student{
+	// 	Name:  "小陈",
+	// 	Score: 100,
+	// }
 
-	s2 := Student{
-		Name:  "小李",
-		Score: 60,
-	}
+	// s2 := Student{
+	// 	Name:  "小李",
+	// 	Score: 60,
+	// }
 
-	s3 := Student{
-		Name:  "小沈",
-		Score: 50,
-	}
+	// s3 := Student{
+	// 	Name:  "小沈",
+	// 	Score: 50,
+	// }
 
-	students := []Student{s1, s2, s3}
-	for _, student := range students {
-		fmt.Println(student.Name, "的成绩是：", student.Score)
+	// students := []Student{s1, s2, s3}
+	students := []Student{
+		{Name: "小陈", Score: 100},
+		{Name: "小李", Score: 60},
+		{Name: "小林", Score: 59},
 	}
+	printStudents(students)
 
-	stats := map[string]int{
-		"及格":  0,
-		"不及格": 0,
-	}
-	for _, student := range students {
-		if student.Score >= 60 {
-			stats["及格"]++
-		} else {
-			stats["不及格"]++
-		}
-	}
+	stats := countStats(students)
 	for stat, count := range stats {
 		fmt.Println(stat, "->", count)
 	}
 
+	top, err := getTopStudent(students)
+	if err != nil {
+		fmt.Println("出错:", err)
+	} else {
+		fmt.Println("最高分同学时：", top.Name, "->", top.Score)
+	}
 }
+
+// day 6
+//   struct 和 map 的关键区别
+
+//   ┌──────────────┬──────────────┬──────────────────────────┐
+//   │              │    struct    │           map            │
+//   ├──────────────┼──────────────┼──────────────────────────┤
+//   │ 访问数据       │ student.Name │ scores["小明"]           │
+//   ├──────────────┼──────────────┼──────────────────────────┤
+//   │ 能否遍历字段   │ ❌ 不能       │ ✅ for k, v := range map  │
+//   ├──────────────┼──────────────┼──────────────────────────┤
+//   │ 空值          │ Student{}    │ nil                      │
+//   └──────────────┴──────────────┴──────────────────────────┘
+
+//   ---
+//   今天踩的坑（重要）
+
+//   ┌──────────────────────────────┬───────────────────────┬───────────────────────────┐
+//   │             错误              │         原因           │         正确写法           │
+//   ├──────────────────────────────┼───────────────────────┼───────────────────────────┤
+//   │ return nil 返回 struct        │ struct 没有 nil       │ return Student{}          │
+//   ├──────────────────────────────┼───────────────────────┼───────────────────────────┤
+//   │ for name, score := student   │ struct 不能遍历字段     │ 用 student.Score 直接访问   │
+//   ├──────────────────────────────┼───────────────────────┼───────────────────────────┤
+//   │ student[name]                │ struct 不能用 [] 取值  │ 用 student.Name             │
+//   ├──────────────────────────────┼───────────────────────┼───────────────────────────┤
+//   │ students == nil 判断空 slice  │ slice 用 len 判断      │ len(students) == 0        │
+//   └──────────────────────────────┴───────────────────────┴───────────────────────────┘
+
+//   ---
+//   今天的提问
+
+//   ┌────────────────────────────────────┬─────────────────────────────────────────────────────────────┐
+//   │                问题                 │                           关键点                             │
+//   ├────────────────────────────────────┼─────────────────────────────────────────────────────────────┤
+//   │ return为什么用 Student{} 而不是 students    │ students 是列表，Student{} 是单个空结构体，返回类型必须匹配        │
+//   └────────────────────────────────────┴─────────────────────────────────────────────────────────────┘
+
+//   ---
