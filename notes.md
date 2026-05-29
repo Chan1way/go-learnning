@@ -124,7 +124,7 @@ git clone https://github.com/你的名字/go-learning.git
 </pre>
 ---
 
-## Day 4 
+## Day 4 p
 ### struct（结构体）
 <pre>
   type Student struct {
@@ -171,3 +171,37 @@ git clone https://github.com/你的名字/go-learning.git
       fmt.Println(name, score)
   }
   </pre>
+
+---
+
+## Day 5 学习总结
+
+  ### 错误处理
+
+  Go 没有 try/catch，用返回值传递错误：
+<pre>
+  // 创建错误的两种方式
+  errors.New("错误信息")           // 简单错误
+  fmt.Errorf("错误: %d", value)   // 带格式的错误（更常用）
+
+  // 调用方每次都要判断
+  val, err := someFunc()
+  if err != nil {
+      fmt.Println("出错:", err)
+  }
+</pre>
+- 出错时返回零值占位，正常时返回 nil 表示没有错误。
+
+
+ ### 多文件拆分
+
+同一个 package main 可以拆成多个文件：
+
+ - main.go       → 只放 main 函数（程序入口）
+ - student.go    → 放 Student 相关的类型和函数
+ - errors_demo.go → 放其他功能函数
+
+运行多文件项目：
+go run *.go   # * 代表所有 .go 文件
+
+---
