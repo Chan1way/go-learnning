@@ -205,3 +205,49 @@ git clone https://github.com/你的名字/go-learning.git
 go run *.go   # * 代表所有 .go 文件
 
 ---
+
+Day 6 学习总结
+
+  **strings 字符串处理** 
+
+  <pre>
+  strings.ToUpper("hello")          // HELLO
+  strings.Contains("hello", "ell")  // true
+  strings.Split("a,b,c", ",")       // [a b c]
+  strings.TrimSpace("  hello  ")    // hello
+  </pre>
+ 
+
+  **strconv 类型转换**
+  <pre>
+  num, _ := strconv.Atoi("123")  // string → int
+  str := strconv.Itoa(456)       // int → string
+  </pre>
+  Go 强类型，不同类型不能直接拼接，必须先转换。
+
+  **JSON 序列化 / 反序列化**
+   
+<pre>
+  // 序列化：struct → JSON
+  data, err := json.Marshal(s)
+  fmt.Println(string(data))  // {"Name":"小明","Score":95}
+
+  // 反序列化：JSON → struct
+  json.Unmarshal([]byte(jsonStr), &s2)
+</pre>
+
+  **第一个 HTTP 服务器**
+
+<pre>
+  // 注册路由
+  http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+      fmt.Fprintln(w, "Hello, World!")
+  })
+  
+  // 启动服务器
+  http.ListenAndServe(":8080", nil)
+</pre>
+  
+
+
+

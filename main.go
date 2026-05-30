@@ -106,8 +106,6 @@
 // day 4 : struct、slice、map
 package main
 
-import "fmt"
-
 // struct
 // 定义一个学生结构体
 // Go 没有 class，用 struct 来表示一个对象：
@@ -197,42 +195,42 @@ import "fmt"
 // 	Score int
 // }
 
-func main() {
-	// s1 := Student{
-	// 	Name:  "小陈",
-	// 	Score: 100,
-	// }
+// func main() {
+// 	// s1 := Student{
+// 	// 	Name:  "小陈",
+// 	// 	Score: 100,
+// 	// }
 
-	// s2 := Student{
-	// 	Name:  "小李",
-	// 	Score: 60,
-	// }
+// 	// s2 := Student{
+// 	// 	Name:  "小李",
+// 	// 	Score: 60,
+// 	// }
 
-	// s3 := Student{
-	// 	Name:  "小沈",
-	// 	Score: 50,
-	// }
+// 	// s3 := Student{
+// 	// 	Name:  "小沈",
+// 	// 	Score: 50,
+// 	// }
 
-	// students := []Student{s1, s2, s3}
-	students := []Student{
-		{Name: "小陈", Score: 100},
-		{Name: "小李", Score: 60},
-		{Name: "小林", Score: 59},
-	}
-	printStudents(students)
+// 	// students := []Student{s1, s2, s3}
+// 	students := []Student{
+// 		{Name: "小陈", Score: 100},
+// 		{Name: "小李", Score: 60},
+// 		{Name: "小林", Score: 59},
+// 	}
+// 	printStudents(students)
 
-	stats := countStats(students)
-	for stat, count := range stats {
-		fmt.Println(stat, "->", count)
-	}
+// 	stats := countStats(students)
+// 	for stat, count := range stats {
+// 		fmt.Println(stat, "->", count)
+// 	}
 
-	top, err := getTopStudent(students)
-	if err != nil {
-		fmt.Println("出错:", err)
-	} else {
-		fmt.Println("最高分同学时：", top.Name, "->", top.Score)
-	}
-}
+// 	top, err := getTopStudent(students)
+// 	if err != nil {
+// 		fmt.Println("出错:", err)
+// 	} else {
+// 		fmt.Println("最高分同学时：", top.Name, "->", top.Score)
+// 	}
+// }
 
 // day 6
 //   struct 和 map 的关键区别
@@ -272,3 +270,9 @@ func main() {
 //   └────────────────────────────────────┴─────────────────────────────────────────────────────────────┘
 
 //   ---
+
+func main() {
+	// stdlibDemo()
+	// jsonDemo()
+	startServer()
+}
