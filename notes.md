@@ -206,7 +206,7 @@ go run *.go   # * 代表所有 .go 文件
 
 ---
 
-Day 6 学习总结
+## Day 6 学习总结
 
   **strings 字符串处理** 
 
@@ -248,6 +248,36 @@ Day 6 学习总结
   http.ListenAndServe(":8080", nil)
 </pre>
   
+---
 
+## Day7 学习总结
+**Gin 基础**
 
+- r := gin.Default()      // 创建路由器
+- r.GET("/path", handler) // 注册路由
+- r.Run(":8080")          // 启动服务器
 
+gin.Default() 自带日志和错误恢复，是最常用的创建方式。
+
+**gin.Context**
+Gin 把请求和响应合并成一个 c *gin.Context：
+
+**关键代码模式**
+<pre>
+  // 取路径参数并转 int
+  id, err := strconv.Atoi(c.Param("id"))
+  if err != nil || id < 0 || id >= len(studentList) {
+      c.JSON(http.StatusBadRequest, gin.H{"error": "id 不合法"})
+      return  // 出错必须 return
+  }
+
+  // 解析请求体
+  var s Student
+  if err := c.ShouldBindJSON(&s); err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+      return
+  }
+
+  // 删除 slice 元素
+  studentList = append(studentList[:id], studentList[id+1:]...)
+</pre>

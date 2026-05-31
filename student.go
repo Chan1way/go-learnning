@@ -2,10 +2,10 @@ package main
 
 import "fmt"
 
-type Student struct {
-	Name  string
-	Score int
-}
+// type Student struct {
+// 	Name  string
+// 	Score int
+// }
 
 func printStudents(students []Student) {
 	for _, student := range students {

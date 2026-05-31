@@ -274,5 +274,6 @@ package main
 func main() {
 	// stdlibDemo()
 	// jsonDemo()
-	startServer()
+	// startServer()
+	startGinServer()
 }
