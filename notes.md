@@ -332,3 +332,196 @@ Gin 把请求和响应合并成一个 c *gin.Context：
 
   GORM 操作默认不报错，要主动检查 result.Error。
   </pre>
+
+## Day 9 学习总结：项目结构重组
+
+### 项目分层结构
+```
+  go-learnning/
+  ├── main.go          # 入口，只负责启动
+  ├── router/
+  │   └── router.go    # 路由注册
+  ├── handler/
+  │   └── student.go   # 接口处理函数
+  ├── model/
+  │   └── student.go   # 数据模型
+  └── db/
+      └── db.go        # 数据库连接
+```
+### 各层职责
+
+  | 层 | 职责 | 类比 |
+  |---|------|------|
+  | model | 定义数据结构，不写逻辑 | 快递单模板 |
+  | db | 建立数据库连接，提供全局 DB | 自来水公司铺水管 |
+  | handler | 接收请求、处理业务、返回响应 | 厨师接单做菜出餐 |
+  | router | 把 URL 和 handler 绑定 | 前台引导客人 |
+  | main.go | 串起所有层，启动服务 | 公司开门营业 |
+
+### 依赖关系
+  ```
+  main.go
+    ├── db（初始化）
+    └── router（注册路由）
+          └── handler（处理函数）
+                ├── db（操作数据库）
+                └── model（数据结构）
+  model 不依赖任何层（最底层）
+  db 只依赖 model
+  规则：依赖只能向下，不能反向
+  ```
+
+### 项目分层详解
+  ```
+请求进来
+     ↓
+  router    → 决定哪个 handler 处理
+     ↓
+  handler   → 接收请求、调数据库、返回响应
+     ↓
+    db        → 提供数据库连接
+     ↓
+  model     → 定义数据结构
+  ```
+
+#### model层（数据模型）
+  **职责**：只负责定义数据长什么样，不做任何逻辑。
+  ```
+// model/student.go
+  type Student struct {
+      gorm.Model
+      Name  string `json:"name"`
+      Score int    `json:"score"`
+  }
+  ```
+**类比**：快递单的格式模板，规定了有哪些字段。
+
+**使用规则：**
+  - 只放 struct 定义和字段
+  - 不写任何业务逻辑
+  - 其他层用 model.Student 来引用
+
+#### db 层（数据库连接）
+**职责**：只负责建立和维护数据库连接，提供全局 DB 变量给其他层用。
+
+```
+  // db/db.go
+  var DB *gorm.DB   // 全局连接，整个项目共用
+
+  func Init() {
+      DB, _ = gorm.Open(...)
+      DB.AutoMigrate(&model.Student{})
+  }
+```
+  **类比**：自来水公司铺好水管，其他人直接拧开关用水，不用关心水怎么来的。
+
+  **使用规则**：
+  - 只放连接初始化代码
+  - 其他层通过 db.DB.Find()、db.DB.Create() 等使用
+
+#### handler 层（业务处理）
+**职责**：接收请求 → 处理业务逻辑 → 返回响应。这是最核心的一层，大部分代码都在这里。
+```
+  // handler/student.go
+  func GetStudents(c *gin.Context) {
+      // 1. 从数据库取数据
+      var students []model.Student
+      db.DB.Find(&students)
+
+      // 2. 返回响应
+      c.JSON(http.StatusOK, students)
+  }
+
+  func CreateStudent(c *gin.Context) {
+      // 1. 解析请求参数
+      var student model.Student
+      c.ShouldBindJSON(&student)
+
+      // 2. 写入数据库
+      db.DB.Create(&student)
+
+      // 3. 返回响应
+      c.JSON(http.StatusOK, student)
+  }
+```
+  **类比**：餐厅厨师，接到点单（请求）→ 做菜（处理逻辑）→ 出餐（返回响应）。
+
+  **使用规则**：
+  - 每个函数对应一个接口
+  - 函数签名固定：func Xxx(c *gin.Context)
+  - 不要在这里写 SQL，用 GORM 的方法操作数据库
+
+#### router 层（路由注册）
+  
+  **职责**：只负责把 URL 路径和 handler 函数绑定在一起。
+
+```
+  // router/router.go
+  func Setup() *gin.Engine {
+      r := gin.Default()
+
+      students := r.Group("/students")  // 路由分组
+      {
+          students.GET("", handler.GetStudents)       // GET /students
+          students.GET("/:id", handler.GetStudent)    // GET /students/1
+          students.POST("", handler.CreateStudent)    // POST /students
+          students.PUT("/:id", handler.UpdateStudent) // PUT /students/1
+          students.DELETE("/:id", handler.DeleteStudent) // DELETE /students/1
+      }
+
+      return r
+  }
+```
+  **类比**：前台接待，根据客人需求（URL）引导去找对应的工作人员（handler）。
+
+  **使用规则**:
+  - 只放路由注册，不写业务逻辑
+  - 用 r.Group 给相关路由分组，保持整洁
+#### main.go（程序入口）
+  
+**职责**：只负责把所有层串起来，启动服务。
+
+```
+  func main() {
+      db.Init()        // 1. 初始化数据库
+      r := router.Setup() // 2. 注册路由
+      r.Run(":8080")   // 3. 启动服务器
+  }
+```
+**类比**：公司开门营业，依次通水（db）、安排前台（router）、开门迎客（Run）。
+
+  ### 新增接口只需两步
+  **第一步：handler 写处理函数**
+  ```go
+  func GetStudentsByScore(c *gin.Context) {
+      score := c.Query("score")
+      var students []model.Student
+      db.DB.Where("score >= ?", score).Find(&students)
+      c.JSON(http.StatusOK, students)
+  }
+
+  第二步：router 注册路由
+  students.GET("/search", handler.GetStudentsByScore)
+
+  今天踩的坑
+
+  ┌──────────────────┬────────────────────────────┬────────────────────────────────┐
+  │       问题        │            原因             │              解决              │
+  ├──────────────────┼────────────────────────────┼────────────────────────────────┤
+  │ import 路径报错    │ 模块名和 import 路径不一致    │ 检查 go.mod 第一行，统一模块名    │
+  ├──────────────────┼────────────────────────────┼────────────────────────────────┤
+  │ 端口 8080 被占用   │ 旧服务器进程没关              │ lsof -ti:8080 | xargs kill -9  │
+  └──────────────────┴────────────────────────────┴────────────────────────────────┘
+
+  关键命令
+  
+  # 查看模块名
+  head -1 go.mod
+
+  # 释放被占用的端口
+  lsof -ti:8080 | xargs kill -9
+
+  # 启动服务器
+  go run main.go
+
+  ```

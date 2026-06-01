@@ -1,4 +1,4 @@
-module go-leanning
+module go-learnning
 
 go 1.26.3
 
