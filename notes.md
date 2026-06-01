@@ -280,4 +280,55 @@ Gin 把请求和响应合并成一个 c *gin.Context：
 
   // 删除 slice 元素
   studentList = append(studentList[:id], studentList[id+1:]...)
+  // ...是展开操作符，主要把第2个 slice 展开成一个个元素传给 append
 </pre>
+
+## Day8学习总结
+  **GORM 核心概念**
+<pre>
+  // 连接数据库
+  DB, err = gorm.Open(sqlite.Open("students.db"), &gorm.Config{})
+
+  // 自动建表
+  DB.AutoMigrate(&Student{})
+</pre>
+
+**gorm.Model**
+<pre>
+  type Student struct {
+      gorm.Model        // 自动加 4 个字段
+      Name  string `json:"name"`
+      Score int    `json:"score"`
+  }
+</pre>
+
+**GORM 四个核心操作**
+<pre>
+  // 查所有
+  var students []Student
+  DB.Find(&students)
+
+  // 查单个
+  var student Student
+  DB.First(&student, id)
+
+  // 新增
+  DB.Create(&student)
+  
+  // 修改
+  DB.Save(&student)
+
+  // 删除
+  DB.Delete(&Student{}, id)
+</pre>
+  
+  **错误检查**
+  <pre>
+  result := DB.Create(&student)
+  if result.Error != nil {
+      c.JSON(500, gin.H{"error": result.Error.Error()})
+      return
+  }
+
+  GORM 操作默认不报错，要主动检查 result.Error。
+  </pre>
