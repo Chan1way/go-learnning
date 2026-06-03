@@ -2,13 +2,15 @@ package router
 
 import (
 	"go-learnning/handler"
+	"go-learnning/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Setup() *gin.Engine {
-	r := gin.Default()
-
+	r := gin.New()
+	r.Use(middleware.Recovery())
+	r.Use(middleware.Logger())
 	students := r.Group("/students")
 	{
 		students.GET("", handler.GetStudents)
