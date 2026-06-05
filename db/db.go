@@ -15,5 +15,5 @@ func Init() {
 	if err != nil {
 		panic("数据库连接失败：" + err.Error())
 	}
-	DB.AutoMigrate(&model.Student{})
+	DB.AutoMigrate(&model.Student{}, &model.User{})
 }

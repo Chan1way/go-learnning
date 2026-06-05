@@ -12,6 +12,7 @@ func Setup() *gin.Engine {
 	r.Use(middleware.Recovery())
 	r.Use(middleware.Logger())
 	students := r.Group("/students")
+	students.Use(middleware.AuthRequired())
 	{
 		students.GET("", handler.GetStudents)
 		students.GET("/:id", handler.GetStudent)
@@ -19,6 +20,7 @@ func Setup() *gin.Engine {
 		students.PUT("/:id", handler.UpdateStudent)
 		students.DELETE("/:id", handler.DeleteStudent)
 	}
-
+	r.POST("/register", handler.Register)
+	r.POST("/login", handler.Login)
 	return r
 }
