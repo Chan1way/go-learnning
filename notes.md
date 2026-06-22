@@ -558,3 +558,166 @@ Gin 把请求和响应合并成一个 c *gin.Context：
 
   ##### Go 时间格式为什么是 2006-01-02？
   Go 不用 YYYY-MM-DD，而是用一个固定参考时间来表示格式，年必须写 2006，写成别的年份就会出错
+
+##  Day 11 简要总结：JWT 登录认证
+
+Day 11 完成一个后端登录认证的基础闭环：
+
+注册 → 登录 → 生成 Token → 带 Token 访问受保护接口
+
+
+#### 1. 新增用户模型
+
+新增了 User：
+
+```
+type User struct {
+    gorm.Model
+    Username string
+    Password string
+}
+
+作用：用数据库保存用户信息。
+```
+
+
+#### 2. 注册接口 /register
+
+注册流程：
+```
+接收 username / password
+→ 保存到 users 表
+→ 返回注册成功
+
+核心代码逻辑是：db.DB.Create(&user)
+```
+
+#### 3. 登录接口 /login
+
+登录流程：
+```
+接收 username / password
+→ 去数据库查询用户
+→ 用户存在则生成 JWT
+→ 返回 token
+
+登录成功后，后端返回一个 token。
+```
+
+#### 4. JWT Token
+
+JWT 里放了：
+```
+username
+过期时间 exp
+
+并用密钥签名：
+
+SignedString([]byte("secret"))
+
+作用：
+让前端之后可以证明“我已经登录过”。
+```
+#### 5. 认证中间件 AuthRequired
+
+中间件做的事情：
+```
+读取 Authorization 请求头
+→ 取出 Bearer token
+→ 解析 token
+→ token 无效就返回 401
+→ token 有效就继续访问接口
+
+关键点：
+
+c.Abort()
+
+表示请求被拦截，不再继续往后执行。
+```
+
+#### 6. 保护 /students 接口
+
+把认证中间件加到了 /students 路由组上：
+```
+students.Use(middleware.AuthRequired())
+
+所以现在访问学生相关接口必须带 token：
+
+Authorization: Bearer <token>
+
+而这两个接口不需要 token：
+
+POST /register
+POST /login
+
+因为用户必须先注册、登录，才能拿到 token。
+```
+
+**HTTP 本身不记住登录状态**
+
+所以需要 token。
+
+登录后：
+
+后端发 token
+
+前端保存 token
+
+之后请求都带 token
+
+后端验证 token
+
+## Day12 简要总结：bcrypt 密码加密
+
+今天完成了登录认证的安全升级：
+
+不再明文保存密码，改用 bcrypt 加密密码。
+
+#### 1. 注册时加密密码
+```
+核心代码：
+
+hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+if err != nil {
+      Fail(c, 500, "密码加密失败")
+      return
+}
+
+user.Password = string(hashedPassword)
+```
+
+作用：
+
+把用户输入的明文密码加密后再存进数据库。
+
+#### 2. 登录时校验密码
+
+以前是：
+```
+
+db.DB.Where("username = ? AND password = ?", input.Username, input.Password).First(&user)
+```
+现在改成：
+```
+db.DB.Where("username = ?", input.Username).First(&user)
+```
+然后用 bcrypt 比较密码：
+```
+err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
+if err != nil {
+      Fail(c, 401, "用户名或密码错误")
+      return
+}
+```
+
+#### 3. 两个变量区别
+
+┌────────────────┬──────────────┬──────────────┐
+│      变量      │     来源     │     含义     │
+├────────────────┼──────────────┼──────────────┤
+│ input.Password │ 用户登录请求 │ 明文密码     │
+├────────────────┼──────────────┼──────────────┤
+│ user.Password  │ 数据库       │ 加密后的密码 │
+└────────────────┴──────────────┴──────────────┘
+
+---

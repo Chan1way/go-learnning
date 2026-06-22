@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginInput struct {
@@ -20,6 +21,15 @@ func Register(c *gin.Context) {
 		Fail(c, 400, "参数错误")
 		return
 	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		Fail(c, 500, "密码加密失败")
+		return
+	}
+
+	user.Password = string(hashedPassword)
+
 	if db.DB.Create(&user).Error != nil {
 		Fail(c, 500, "注册失败")
 		return
@@ -36,8 +46,13 @@ func Login(c *gin.Context) {
 
 	// 查用户
 	var user model.User
-	if db.DB.Where("username = ? AND password =?",
-		input.Username, input.Password).First(&user).Error != nil {
+	if db.DB.Where("username = ?", input.Username).First(&user).Error != nil {
+		Fail(c, 401, "用户名或密码错误")
+		return
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
+	if err != nil {
 		Fail(c, 401, "用户名或密码错误")
 		return
 	}

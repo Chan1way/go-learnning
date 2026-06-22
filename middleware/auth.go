@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"go-learnning/handler"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ func AuthRequired() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(401, gin.H{"error": "无效的token"})
+			handler.Fail(c, 401, "无效的token")
 			c.Abort()
 			return
 		}
